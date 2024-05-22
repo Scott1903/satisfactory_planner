@@ -4,7 +4,7 @@ import os
 from main import optimize_production
 
 # Load data from data.json
-data_file = 'data.json'
+data_file = 'Data\data.json'
 try:
     with open(data_file, 'r') as file:
         data = json.load(file)
@@ -48,7 +48,7 @@ outputs = settings['outputs']
 max_item = settings['max_item']
 
 # Load settings on saved.json
-def load_settings(filename='saved.json'):
+def load_settings(filename):
     try:
         with open(filename, 'r') as file:
             settings = json.load(file)
@@ -57,7 +57,7 @@ def load_settings(filename='saved.json'):
         return None
 
 # Function to save settings
-def save_settings(filename='saved.json'):
+def save_settings(filename):
     settings = {
         'resource_limits': resource_limits,
         'weights': weights,
