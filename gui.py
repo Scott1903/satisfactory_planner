@@ -73,18 +73,15 @@ if not os.path.exists('Saves'):
     os.makedirs('Saves')
 
 # Extract recipes and their names from the data
-recipes = {}
-if data and 'recipes' in data:
-    recipes = {key: data['recipes'][key]['name'] for key in data['recipes']}
+recipes = {key: data['recipes'][key]['name'] for key in data['recipes']}
 
 # Separate recipes into regular and alternate lists
 regular_recipes = sorted([(key, name) for key, name in recipes.items() if not name.startswith('Alternate')], key=lambda x: x[1])
 alternate_recipes = sorted([(key, name) for key, name in recipes.items() if name.startswith('Alternate')], key=lambda x: x[1])
 
 # Extract items and their names from the data
-items = {}
-if data and 'items' in data:
-    items = {key: data['items'][key]['name'] for key in data['items']}
+products = {p['item'] for recipe in data['recipes'].values() for p in recipe['products']}
+items = {key: data['items'][key]['name'] for key in data['items'] if key in products}
 
 # Sort items alphabetically
 sorted_items = sorted(items.items(), key=lambda x: x[1])
@@ -154,8 +151,14 @@ weights_layout = [
 recipes_layout = [
     [sg.Text('Recipes', font=('Helvetica', 16), text_color=sg.LOOK_AND_FEEL_TABLE['Modern']['ACCENT1'])],
     [
-        sg.Column([[sg.Text('Regular Recipes')]] + [[sg.Checkbox(name, default=True, key=f"recipe_{key}")] for key, name in regular_recipes], scrollable=True, vertical_scroll_only=True, size=(250, 300)),
-        sg.Column([[sg.Text('Alternate Recipes')]] + [[sg.Checkbox(name, default=True, key=f"recipe_{key}")] for key, name in alternate_recipes], scrollable=True, vertical_scroll_only=True, size=(250, 300))
+        sg.Column([
+            [sg.Text('Regular Recipes'), sg.Checkbox('Select All', key='regular_select_all', enable_events=True)],
+            *[[sg.Checkbox(name, default=True, key=f"recipe_{key}")] for key, name in regular_recipes]
+        ], scrollable=True, vertical_scroll_only=True, size=(250, 300)),
+        sg.Column([
+            [sg.Text('Alternate Recipes'), sg.Checkbox('Select All', key='alternate_select_all', enable_events=True)],
+            *[[sg.Checkbox(name, default=True, key=f"recipe_{key}")] for key, name in alternate_recipes]
+        ], scrollable=True, vertical_scroll_only=True, size=(250, 300))
     ]
 ]
 
@@ -213,6 +216,14 @@ while True:
     if event.startswith('info_'):
         key = event.split('_')[1]
         sg.popup(key, weight_info.get(key, 'No information available.'))
+
+    # Handle select all recipe checkboxes
+    if event == 'regular_select_all':
+        for key, _ in regular_recipes:
+            window[f'recipe_{key}'].update(values['regular_select_all'])
+    elif event == 'alternate_select_all':
+        for key, _ in alternate_recipes:
+            window[f'recipe_{key}'].update(values['alternate_select_all'])
 
     # Handle add output button
     elif event == 'Add Output':
@@ -278,6 +289,8 @@ while True:
                         highest_key_suffix = max(highest_key_suffix, output_key_suffix)
                     window[f'output_item_{i}'].update(items[item])
                     window[f'output_amount_{i}'].update(amount)
+                if max_item:
+                    window[f'output_checkbox_{0}'].update(True)
                 sg.popup(f"Settings loaded from {load_filename}")
             else:
                 sg.popup_error(f"Failed to load settings from {load_filename}")
