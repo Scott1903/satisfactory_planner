@@ -163,11 +163,11 @@ recipes_layout = [
 ]
 
 # Function to create output layout
-def create_output_layout(key_suffix):
+def create_output_layout(key_suffix, visible=True):
     return [
-        sg.Combo([name for _, name in sorted_items], default_value='', key=f'output_item_{key_suffix}', enable_events=True, size=(30, 1)),
-        sg.InputText(default_text='0', key=f'output_amount_{key_suffix}', size=(10, 1)),
-        sg.Checkbox('Maximize this item', key=f'output_checkbox_{key_suffix}', enable_events=True, visible=(key_suffix == 0))  # Only visible for the first item
+        sg.Combo([name for _, name in sorted_items], default_value='', key=f'output_item_{key_suffix}', enable_events=True, size=(30, 1), visible=visible),
+        sg.InputText(default_text='0', key=f'output_amount_{key_suffix}', size=(10, 1), visible=visible),
+        sg.Checkbox('Maximize this item', key=f'output_checkbox_{key_suffix}', enable_events=True, visible=(key_suffix == 0 and visible))  # Only visible for the first item
     ]
 
 # Initial layout for outputs
@@ -183,7 +183,13 @@ results_layout = [
     [sg.Multiline(size=(80, 20), key='results_output')]
 ]
 
-# Layout for results
+# Layout for products
+products_layout = [
+    [sg.Text('Products', font=('Helvetica', 16), text_color=sg.LOOK_AND_FEEL_TABLE['Modern']['ACCENT1'])],
+    [sg.Multiline(size=(80, 20), key='products_output')]
+]
+
+# Layout for ingredients
 ingredients_layout = [
     [sg.Text('Ingredients', font=('Helvetica', 16), text_color=sg.LOOK_AND_FEEL_TABLE['Modern']['ACCENT1'])],
     [sg.Multiline(size=(80, 20), key='ingredients_output')]
@@ -197,6 +203,7 @@ layout = [
          sg.Tab('Recipes', recipes_layout),
          sg.Tab('Outputs', output_layout),
          sg.Tab('Results', results_layout),
+         sg.Tab('Products', products_layout),
          sg.Tab('Ingredients', ingredients_layout)]
     ])]
 ]
@@ -220,12 +227,12 @@ while True:
         break
 
     # Handle info buttons
-    if event.startswith('info_'):
+    elif event.startswith('info_'):
         key = event.split('_')[1]
         sg.popup(key, weight_info.get(key, 'No information available.'))
 
     # Handle select all recipe checkboxes
-    if event == 'regular_select_all':
+    elif event == 'regular_select_all':
         for key, _ in regular_recipes:
             window[f'recipe_{key}'].update(values['regular_select_all'])
     elif event == 'alternate_select_all':
@@ -234,20 +241,23 @@ while True:
 
     # Handle add output button
     elif event == 'Add Output':
-        window.extend_layout(window['Outputs'], [create_output_layout(output_key_suffix)])
+        if output_key_suffix < highest_key_suffix:
+            window[f'output_item_{output_key_suffix}'].update(visible=True)
+            window[f'output_amount_{output_key_suffix}'].update(visible=True)
+        else:
+            window.extend_layout(window['Outputs'], [create_output_layout(output_key_suffix)])
         output_key_suffix += 1
         highest_key_suffix = max(highest_key_suffix, output_key_suffix)
 
     # Handle remove output button
-    if event == 'Remove Output' and output_key_suffix > 1:
+    elif event == 'Remove Output' and output_key_suffix > 1:
         output_key_suffix -= 1
-        for suffix in range(output_key_suffix, highest_key_suffix):
-            window[f'output_item_{suffix}'].update(visible=False)
-            window[f'output_amount_{suffix}'].update(visible=False)
-            window[f'output_amount_{suffix}'].hide_row()
+        window[f'output_item_{output_key_suffix}'].update(visible=False)
+        window[f'output_amount_{output_key_suffix}'].update(visible=False)
+        window[f'output_checkbox_{output_key_suffix}'].update(visible=False)
 
     # Handle maximize checkbox
-    if event.startswith('output_checkbox_'):
+    elif event.startswith('output_checkbox_'):
         key_suffix = int(event.split('output_checkbox_')[1])
         if values[event] and key_suffix == 0:
             max_item = sorted_items[0][0]  # Use first item as an example
@@ -255,7 +265,7 @@ while True:
             max_item = False
 
     # Handle save settings button
-    if event == 'Save Settings':
+    elif event == 'Save Settings':
         try:
             resource_limits = {key: float(values[f'resource_{key}']) for key in resource_limits}
             weights = {key: float(values[f'weight_{key}']) for key in weights}
@@ -271,7 +281,7 @@ while True:
             sg.popup(f"Settings saved to {save_filename}")
 
     # Handle load settings button
-    if event == 'Load Settings':
+    elif event == 'Load Settings':
         load_filename = sg.popup_get_file('Load settings from', no_window=True, file_types=(("JSON Files", "*.json"),), initial_folder='Saves')
         if load_filename:
             loaded_settings = load_settings(load_filename)
@@ -282,28 +292,45 @@ while True:
                 recipes_off = settings['recipes_off']
                 outputs = settings['outputs']
                 max_item = settings['max_item']
-
+                # Load resource limits
                 for key, value in resource_limits.items():
                     window[f'resource_{key}'].update(value)
+                # Load weights
                 for key, value in weights.items():
                     window[f'weight_{key}'].update(value)
+                # Load recipe checkboxes
                 for key in recipes:
                     window[f'recipe_{key}'].update(key not in recipes_off)
+                # Reset existing output rows
+                for i in range(1, highest_key_suffix):
+                    window[f'output_item_{i}'].update(visible=False)
+                    window[f'output_amount_{i}'].update(visible=False)
+                    window[f'output_checkbox_{i}'].update(visible=False)
+                output_key_suffix = 1
+                # Load output rows
                 for i, (item, amount) in enumerate(outputs.items()):
-                    if i >= output_key_suffix:
-                        window.extend_layout(window['Outputs'], [create_output_layout(output_key_suffix)])
+                    if i > 0:
+                        if output_key_suffix < highest_key_suffix:
+                            window[f'output_item_{output_key_suffix}'].update(visible=True)
+                            window[f'output_amount_{output_key_suffix}'].update(visible=True)
+                        else:
+                            window.extend_layout(window['Outputs'], [create_output_layout(output_key_suffix)])
                         output_key_suffix += 1
                         highest_key_suffix = max(highest_key_suffix, output_key_suffix)
                     window[f'output_item_{i}'].update(items[item])
                     window[f'output_amount_{i}'].update(amount)
+                # Load maximize checkbox
                 if max_item:
                     window[f'output_checkbox_{0}'].update(True)
+                else:
+                    window[f'output_checkbox_{0}'].update(False)
+
                 sg.popup(f"Settings loaded from {load_filename}")
             else:
                 sg.popup_error(f"Failed to load settings from {load_filename}")
 
     # Handle reset button
-    if event == 'Reset':
+    elif event == 'Reset':
         settings = default_settings()
         resource_limits = settings['resource_limits']
         weights = settings['weights']
@@ -317,25 +344,30 @@ while True:
             window[f'weight_{key}'].update(value)
         for key in recipes:
             window[f'recipe_{key}'].update(True)
-        for i in range(output_key_suffix):
-            window[f'output_item_{i}'].update('')
-            window[f'output_amount_{i}'].update('0')
+        window[f'output_item_{0}'].update('')
+        window[f'output_amount_{0}'].update('0')
         window[f'output_checkbox_{0}'].update(False)
+        for i in range(1, highest_key_suffix):
+            window[f'output_item_{i}'].update('')
+            window[f'output_amount_{i}'].update(0)
+            window[f'output_item_{i}'].update(visible=False)
+            window[f'output_amount_{i}'].update(visible=False)
+            window[f'output_checkbox_{i}'].update(visible=False)
         output_key_suffix = 1
-        highest_key_suffix = 1
         window['results_output'].update('')
         sg.popup("Settings reset to default values.")
 
     # Handle run optimization button
-    if event == 'Run Optimization':
+    elif event == 'Run Optimization':
         try:
             resource_limits = {key: float(values[f'resource_{key}']) for key in resource_limits}
             weights = {key: float(values[f'weight_{key}']) for key in weights}
             recipes_off = [key for key in recipes if not values[f'recipe_{key}']]
             outputs = {key: float(values[f'output_amount_{i}']) for i in range(output_key_suffix) for key, name in sorted_items if name == values[f'output_item_{i}']}
             max_item = next((key for key, name in sorted_items if name == values['output_item_0']), False) if values.get('output_checkbox_0') else False
-
             results = optimize_production(data, resource_limits, outputs, recipes_off, weights, max_item)
+
+            # Results tab
             results_output = 'Items Returned:\n'
             results_output += '\n'.join(f"{item}: {round(amount, 2)}" for item, amount in sorted(results.get('items_output', {}).items()))
             results_output += '\n\nResources:\n'
@@ -351,13 +383,23 @@ while True:
             results_output += 'Resources*: {}\n'.format(round(results.get('resources_scaled', 0), 1))
             window['results_output'].update(results_output)
 
+            # Products tab
             all_items = {**results['items_needed'], **results['resources_needed']}
-            results_output = 'Ingredients Map:'
-            for ingredient, map in sorted(results['ingredients_map'].items()):
-                results_output += f"\n\n{ingredient}: ({round(all_items[ingredient],2)})"
+            results_output = ['Products Map:']
+            for ingredient, map in sorted(results['products_map'].items()):
+                results_output.append(f"\n\n{ingredient}: ({round(all_items[ingredient], 2)})")
                 for recipe, num in sorted(map.items()):
-                    results_output += f"\n{round(num, 2)} -> {recipe}"
-            window['ingredients_output'].update(results_output)
+                    results_output.append(f"\n{round(num, 2)} -> {recipe} ({round(results['recipes_used'][recipe], 2)})")
+            window['products_output'].update(''.join(results_output))
+
+            # Ingredients tab
+            results_output = ['Ingredients Map:']
+            for recipe, map in sorted(results['ingredients_map'].items()):
+                results_output.append(f"\n\n{recipe}: ({round(results['recipes_used'][recipe], 2)})")
+                for ingredient, num in sorted(map.items()):
+                    results_output.append(f"\n<- {round(num, 2)}  {ingredient}")
+            window['ingredients_output'].update(''.join(results_output))
+
         except Exception as e:
             sg.popup_error(f"Error running optimization: {e}")
 
