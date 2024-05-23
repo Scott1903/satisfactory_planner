@@ -152,11 +152,11 @@ recipes_layout = [
     [sg.Text('Recipes', font=('Helvetica', 16), text_color=sg.LOOK_AND_FEEL_TABLE['Modern']['ACCENT1'])],
     [
         sg.Column([
-            [sg.Text('Regular Recipes'), sg.Checkbox('Select All', key='regular_select_all', enable_events=True)],
+            [sg.Text('Regular Recipes'), sg.Checkbox('Select All', default=True, key='regular_select_all', enable_events=True)],
             *[[sg.Checkbox(name, default=True, key=f"recipe_{key}")] for key, name in regular_recipes]
         ], scrollable=True, vertical_scroll_only=True, size=(250, 300)),
         sg.Column([
-            [sg.Text('Alternate Recipes'), sg.Checkbox('Select All', key='alternate_select_all', enable_events=True)],
+            [sg.Text('Alternate Recipes'), sg.Checkbox('Select All', default=True, key='alternate_select_all', enable_events=True)],
             *[[sg.Checkbox(name, default=True, key=f"recipe_{key}")] for key, name in alternate_recipes]
         ], scrollable=True, vertical_scroll_only=True, size=(250, 300))
     ]
@@ -183,6 +183,12 @@ results_layout = [
     [sg.Multiline(size=(80, 20), key='results_output')]
 ]
 
+# Layout for results
+ingredients_layout = [
+    [sg.Text('Ingredients', font=('Helvetica', 16), text_color=sg.LOOK_AND_FEEL_TABLE['Modern']['ACCENT1'])],
+    [sg.Multiline(size=(80, 20), key='ingredients_output')]
+]
+
 # Main layout with Tabs
 layout = [
     [sg.TabGroup([
@@ -190,7 +196,8 @@ layout = [
          sg.Tab('Weights', weights_layout),
          sg.Tab('Recipes', recipes_layout),
          sg.Tab('Outputs', output_layout),
-         sg.Tab('Results', results_layout)]
+         sg.Tab('Results', results_layout),
+         sg.Tab('Ingredients', ingredients_layout)]
     ])]
 ]
 
@@ -329,13 +336,11 @@ while True:
             max_item = next((key for key, name in sorted_items if name == values['output_item_0']), False) if values.get('output_checkbox_0') else False
 
             results = optimize_production(data, resource_limits, outputs, recipes_off, weights, max_item)
-            results_output = 'Items Outputed:\n'
+            results_output = 'Items Returned:\n'
             results_output += '\n'.join(f"{item}: {round(amount, 2)}" for item, amount in sorted(results.get('items_output', {}).items()))
-            results_output += '\n\nResources Needed:\n'
+            results_output += '\n\nResources:\n'
             results_output += '\n'.join(f"{resource}: {round(amount, 2)}" for resource, amount in sorted(results.get('resources_needed', {}).items()))
-            results_output += '\n\nItems Needed:\n'
-            results_output += '\n'.join(f"{item}: {round(amount, 2)}" for item, amount in sorted(results.get('items_needed', {}).items()))
-            results_output += '\n\nRecipes Used:\n'
+            results_output += '\n\nRecipes:\n'
             results_output += '\n'.join(f"{recipe}: {round(amount, 2)}" for recipe, amount in sorted(results.get('recipes_used', {}).items()))
             results_output += '\n\nPower Produced: {}\n'.format(round(results.get('power_produced', 0), 1))
             results_output += '\nPower Used: {}\n'.format(round(results.get('power_use', 0), 1))
@@ -345,6 +350,14 @@ while True:
             results_output += 'Buildings*: {}\n'.format(round(results.get('buildings_scaled', 0), 1))
             results_output += 'Resources*: {}\n'.format(round(results.get('resources_scaled', 0), 1))
             window['results_output'].update(results_output)
+
+            all_items = {**results['items_needed'], **results['resources_needed']}
+            results_output = 'Ingredients Map:'
+            for ingredient, map in sorted(results['ingredients_map'].items()):
+                results_output += f"\n\n{ingredient}: ({round(all_items[ingredient],2)})"
+                for recipe, num in sorted(map.items()):
+                    results_output += f"\n{round(num, 2)} -> {recipe}"
+            window['ingredients_output'].update(results_output)
         except Exception as e:
             sg.popup_error(f"Error running optimization: {e}")
 

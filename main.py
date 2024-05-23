@@ -24,6 +24,21 @@ def optimize_production(data, resource_limits, outputs, recipes_off, weights, ma
     items_needed = {data['items'][var_name]['name']: var.value for var_name, var in m.i.items() if var.value is not None and var.value > 0.001 and var_name not in resource_limits and var_name is not 'Power_Produced'}
     recipes_used = {data['recipes'][var_name]['name']: var.value for var_name, var in m.r.items() if var.value is not None and var.value > 0.001}
     power_produced = m.x['Power_Produced']()
+    ingredients_map = {}
+    for item, item_val in m.i.items():
+        if item_val.value is not None and item_val.value > 0.001:
+            item_map = {}
+            for recipe, recipe_val in m.r.items():
+                if recipe_val.value is not None and recipe_val.value > 0.001:
+                    for ingredient in data['recipes'][recipe]['ingredients']:
+                        if item == ingredient['item']:
+                            amount = (60/data['recipes'][recipe]['time'])*ingredient['amount']*recipe_val.value
+                            item_map[data['recipes'][recipe]['name']] = amount
+            if len(item_map) > 0:
+                if item in data['items']:
+                    ingredients_map[data['items'][item]['name']] = item_map
+                elif item in data['resources']:
+                    ingredients_map[data['resources'][item]['name']] = item_map
 
     # Extract costs
     power_use = m.power_use()
@@ -44,4 +59,5 @@ def optimize_production(data, resource_limits, outputs, recipes_off, weights, ma
         'buildings': buildings,
         'resources': resources,
         'buildings_scaled': buildings_scaled,
-        'resources_scaled': resources_scaled}
+        'resources_scaled': resources_scaled,
+        'ingredients_map': ingredients_map}
