@@ -355,6 +355,8 @@ while True:
             window[f'output_checkbox_{i}'].update(visible=False)
         output_key_suffix = 1
         window['results_output'].update('')
+        window['products_output'].update('')
+        window['ingredients_output'].update('')
         sg.popup("Settings reset to default values.")
 
     # Handle run optimization button
