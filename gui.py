@@ -373,11 +373,11 @@ while True:
             results_output = 'Items Returned:\n'
             results_output += '\n'.join(f"{item}: {round(amount, 2)}" for item, amount in sorted(results.get('items_output', {}).items()))
             results_output += '\n\nResources:\n'
-            results_output += '\n'.join(f"{resource}: {round(amount, 2)}" for resource, amount in sorted(results.get('resources_needed', {}).items()))
+            r_limits = {data['resources'][r]['name']: lim for r, lim in resource_limits.items()}
+            results_output += '\n'.join(f"{resource}: {round(amount, 2)} ({round(amount/r_limits[resource]*100,1)}%)" for resource, amount in sorted(results.get('resources_needed', {}).items()))
             results_output += '\n\nRecipes:\n'
-            results_output += '\n'.join(f"{recipe}: {round(amount, 2)}" for recipe, amount in sorted(results.get('recipes_used', {}).items()))
-            results_output += '\n\nPower Produced: {}\n'.format(round(results.get('power_produced', 0), 1))
-            results_output += '\nPower Used: {}\n'.format(round(results.get('power_use', 0), 1))
+            results_output += '\n'.join(f"{recipe} [{round(amount, 2)}]" for recipe, amount in sorted(results.get('recipes_used', {}).items()))
+            results_output += '\n\nPower Used: {}\n'.format(round(results.get('power_use', 0), 1))
             results_output += 'Items: {}\n'.format(round(results.get('item_use', 0), 1))
             results_output += 'Buildings: {}\n'.format(round(results.get('buildings', 0), 1))
             results_output += 'Resources: {}\n'.format(round(results.get('resources', 0), 1))
@@ -389,15 +389,15 @@ while True:
             all_items = {**results['items_needed'], **results['resources_needed']}
             results_output = ['Products Map:']
             for ingredient, map in sorted(results['products_map'].items()):
-                results_output.append(f"\n\n{ingredient}: ({round(all_items[ingredient], 2)})")
+                results_output.append(f"\n\n{ingredient} ({round(all_items[ingredient], 2)})")
                 for recipe, num in sorted(map.items()):
-                    results_output.append(f"\n{round(num, 2)} -> {recipe} ({round(results['recipes_used'][recipe], 2)})")
+                    results_output.append(f"\n{round(num, 2)} -> {recipe} [{round(results['recipes_used'][recipe], 2)}]")
             window['products_output'].update(''.join(results_output))
 
             # Ingredients tab
             results_output = ['Ingredients Map:']
             for recipe, map in sorted(results['ingredients_map'].items()):
-                results_output.append(f"\n\n{recipe}: ({round(results['recipes_used'][recipe], 2)})")
+                results_output.append(f"\n\n{recipe} [{round(results['recipes_used'][recipe], 2)}]")
                 for ingredient, num in sorted(map.items()):
                     results_output.append(f"\n<- {round(num, 2)}  {ingredient}")
             window['ingredients_output'].update(''.join(results_output))
