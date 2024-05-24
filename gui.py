@@ -1,6 +1,12 @@
+import os
+import sys
+# redirect stdout and stderr because Windows is dumb
+if sys.stdout is None or sys.stderr is None:
+    sys.stdout = open(os.devnull, 'w')
+    sys.stderr = open(os.devnull, 'w') 
+
 import PySimpleGUI as sg
 import json
-import os
 from main import optimize_production
 
 # Load data from data.json
