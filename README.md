@@ -7,3 +7,6 @@ main.py is the translator to the model and runs the solver.
 model.py creates the model for the solver.
 
 The Saves file contains the saved settings states by the user.
+
+CREATE .EXE:
+pyinstaller --onefile --windowed --icon=icon.ico --collect-all pyomo --name SatisfactoryPlanner gui.py
