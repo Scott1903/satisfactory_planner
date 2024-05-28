@@ -1,14 +1,14 @@
 from model import create_model
 from pyomo.environ import *
 
-def optimize_production(data, resource_limits, outputs, recipes_off, weights, max_item):
+def optimize_production(data, resource_limits, inputs, outputs, recipes_off, weights, max_item):
 
     # Remove max_item from outputs if exists
     if max_item in outputs:
         del outputs[max_item]
 
     # Create model
-    m = create_model(data, resource_limits, outputs, weights, max_item)
+    m = create_model(data, resource_limits, inputs, outputs, weights, max_item)
 
     # Turn off recipes given
     for recipe in recipes_off:
@@ -19,6 +19,7 @@ def optimize_production(data, resource_limits, outputs, recipes_off, weights, ma
     result = solver.solve(m)
     
     # Collect results
+    items_input = {data['items'][var_name]['name']: var.value for var_name, var in m.n.items() if var.value is not None and var.value > 0.001}
     items_output = {data['items'][var_name]['name']: var.value for var_name, var in m.x.items() if var.value is not None and var.value > 0.001}
     resources_needed = {data['resources'][var_name]['name']: var.value for var_name, var in m.i.items() if var.value is not None and var.value > 0.001 and var_name in resource_limits}
     items_needed = {data['items'][var_name]['name']: var.value for var_name, var in m.i.items() if var.value is not None and var.value > 0.001 and var_name not in resource_limits and var_name is not 'Power_Produced'}
@@ -52,6 +53,7 @@ def optimize_production(data, resource_limits, outputs, recipes_off, weights, ma
     resources_scaled = m.resources_scaled()
 
     return {
+        'items_input': items_input,
         'items_output': items_output,
         'resources_needed': resources_needed,
         'items_needed': items_needed,

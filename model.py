@@ -14,7 +14,8 @@ def extract_items(data):
     return resources, recipes, products, ingredients
 
 def define_variables(m, all_items, recipes):
-    m.x = Var(all_items, within=NonNegativeReals)  # Final production of items
+    m.n = Var(all_items, within=NonNegativeReals)  # Input Items
+    m.x = Var(all_items, within=NonNegativeReals)  # Output Items
     m.i = Var(all_items, within=NonNegativeReals)  # Intermediate items
     m.r = Var(recipes, within=NonNegativeReals)  # Amount of each recipe used
 
@@ -25,6 +26,13 @@ def define_variables(m, all_items, recipes):
     m.resource_use = Var(within=NonNegativeReals)
     m.buildings_scaled = Var(within=NonNegativeReals)
     m.resources_scaled = Var(within=NonNegativeReals)
+
+def fix_input_amounts(m, inputs, all_items):
+    for item in all_items:
+        if item in inputs.keys():
+            m.n[item].fix(inputs[item])
+        else:
+            m.n[item].fix(0)
 
 def fix_output_amounts(m, outputs):
     if outputs == []:
@@ -37,7 +45,7 @@ def fix_output_amounts(m, outputs):
 
 def add_product_constraints(m, products, data):
     for item in products:
-        expr = sum(
+        expr = m.n[item] + sum(
             p['amount'] * 60 / recipe_data['time'] * m.r[recipe_key]
             for recipe_key, recipe_data in data['recipes'].items()
             for p in recipe_data['products']
@@ -112,12 +120,13 @@ def set_objective(m, weights, max_item):
                max_item_expr,
         sense = minimize)
 
-def create_model(data, resource_limits, outputs, weights, max_item):
+def create_model(data, resource_limits, inputs, outputs, weights, max_item):
     m = ConcreteModel()
     m.c = ConstraintList()
 
     resources, recipes, products, ingredients = extract_items(data)
     define_variables(m, resources.union(products, ingredients), recipes)
+    fix_input_amounts(m, inputs, resources.union(products, ingredients))
     fix_output_amounts(m, outputs)
     add_product_constraints(m, products, data)
     add_ingredient_constraints(m, resources.union(products, ingredients), data)

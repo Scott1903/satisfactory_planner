@@ -43,6 +43,7 @@ def default_settings():
             'Resources Scaled': 1,
             'Uranium Waste': 999999},
         'recipes_off': [],
+        'inputs': {},
         'outputs': {},
         'max_item': False}
 
@@ -50,6 +51,7 @@ settings = default_settings()
 resource_limits = settings['resource_limits']
 weights = settings['weights']
 recipes_off = settings['recipes_off']
+inputs = settings['inputs']
 outputs = settings['outputs']
 max_item = settings['max_item']
 
@@ -168,6 +170,20 @@ recipes_layout = [
     ]
 ]
 
+# Function to create input layout
+def create_input_layout(key_suffix, visible=True):
+    return [
+        sg.Combo([name for _, name in sorted_items], default_value='', key=f'input_item_{key_suffix}', enable_events=True, size=(30, 1), visible=visible),
+        sg.InputText(default_text='0', key=f'input_amount_{key_suffix}', size=(10, 1), visible=visible)
+    ]
+
+# Initial layout for inputs
+input_layout = [
+    [sg.Text('Inputs', font=('Helvetica', 16), text_color=sg.LOOK_AND_FEEL_TABLE['Modern']['ACCENT1'])],
+    create_input_layout(0),
+    [sg.Button('Add Input'), sg.Button('Remove Input')]
+]
+
 # Function to create output layout
 def create_output_layout(key_suffix, visible=True):
     return [
@@ -207,6 +223,7 @@ layout = [
         [sg.Tab('Resource Limits', resource_layout), 
          sg.Tab('Weights', weights_layout),
          sg.Tab('Recipes', recipes_layout),
+         sg.Tab('Inputs', input_layout),
          sg.Tab('Outputs', output_layout),
          sg.Tab('Results', results_layout),
          sg.Tab('Products', products_layout),
@@ -216,8 +233,10 @@ layout = [
 
 window = sg.Window('Satisfactory Optimization Tool - Update 8', layout)
 
+input_key_suffix = 1
+highest_input_key = 1
 output_key_suffix = 1
-highest_key_suffix = 1
+highest_output_key = 1
 
 def parse_input(input_str):
     try:
@@ -245,22 +264,37 @@ while True:
         for key, _ in alternate_recipes:
             window[f'recipe_{key}'].update(values['alternate_select_all'])
 
+    # Handle add input button
+    elif event == 'Add Input':
+        if input_key_suffix < highest_input_key:
+            window[f'input_item_{input_key_suffix}'].update(visible=True)
+            window[f'input_amount_{input_key_suffix}'].update(visible=True)
+        else:
+            window.extend_layout(window['Inputs'], [create_input_layout(input_key_suffix)])
+        input_key_suffix += 1
+        highest_input_key = max(highest_input_key, input_key_suffix)
+
+    # Handle remove input button
+    elif event == 'Remove Input' and input_key_suffix > 1:
+        input_key_suffix -= 1
+        window[f'input_item_{input_key_suffix}'].update(visible=False)
+        window[f'input_amount_{input_key_suffix}'].update(visible=False)
+
     # Handle add output button
     elif event == 'Add Output':
-        if output_key_suffix < highest_key_suffix:
+        if output_key_suffix < highest_output_key:
             window[f'output_item_{output_key_suffix}'].update(visible=True)
             window[f'output_amount_{output_key_suffix}'].update(visible=True)
         else:
             window.extend_layout(window['Outputs'], [create_output_layout(output_key_suffix)])
         output_key_suffix += 1
-        highest_key_suffix = max(highest_key_suffix, output_key_suffix)
+        highest_output_key = max(highest_output_key, output_key_suffix)
 
     # Handle remove output button
     elif event == 'Remove Output' and output_key_suffix > 1:
         output_key_suffix -= 1
         window[f'output_item_{output_key_suffix}'].update(visible=False)
         window[f'output_amount_{output_key_suffix}'].update(visible=False)
-        window[f'output_checkbox_{output_key_suffix}'].update(visible=False)
 
     # Handle maximize checkbox
     elif event.startswith('output_checkbox_'):
@@ -276,6 +310,7 @@ while True:
             resource_limits = {key: float(values[f'resource_{key}']) for key in resource_limits}
             weights = {key: float(values[f'weight_{key}']) for key in weights}
             recipes_off = [key for key in recipes if not values[f'recipe_{key}']]
+            inputs = {key: float(values[f'input_amount_{i}']) for i in range(input_key_suffix) for key, name in sorted_items if name == values[f'input_item_{i}']}
             outputs = {key: float(values[f'output_amount_{i}']) for i in range(output_key_suffix) for key, name in sorted_items if name == values[f'output_item_{i}']}
             max_item = next((key for key, name in sorted_items if name == values['output_item_0']), False) if values.get('output_checkbox_0') else False
 
@@ -307,8 +342,26 @@ while True:
                 # Load recipe checkboxes
                 for key in recipes:
                     window[f'recipe_{key}'].update(key not in recipes_off)
+                # Reset existing ipnut rows
+                for i in range(1, highest_input_key):
+                    window[f'input_item_{i}'].update(visible=False)
+                    window[f'input_amount_{i}'].update(visible=False)
+                    window[f'input_checkbox_{i}'].update(visible=False)
+                input_key_suffix = 1
+                # Load input rows
+                for i, (item, amount) in enumerate(inputs.items()):
+                    if i > 0:
+                        if input_key_suffix < highest_input_key:
+                            window[f'input_item_{input_key_suffix}'].update(visible=True)
+                            window[f'input_amount_{input_key_suffix}'].update(visible=True)
+                        else:
+                            window.extend_layout(window['Inputs'], [create_input_layout(input_key_suffix)])
+                        input_key_suffix += 1
+                        highest_input_key = max(highest_input_key, input_key_suffix)
+                    window[f'input_item_{i}'].update(items[item])
+                    window[f'input_amount_{i}'].update(amount)
                 # Reset existing output rows
-                for i in range(1, highest_key_suffix):
+                for i in range(1, highest_output_key):
                     window[f'output_item_{i}'].update(visible=False)
                     window[f'output_amount_{i}'].update(visible=False)
                     window[f'output_checkbox_{i}'].update(visible=False)
@@ -316,13 +369,13 @@ while True:
                 # Load output rows
                 for i, (item, amount) in enumerate(outputs.items()):
                     if i > 0:
-                        if output_key_suffix < highest_key_suffix:
+                        if output_key_suffix < highest_output_key:
                             window[f'output_item_{output_key_suffix}'].update(visible=True)
                             window[f'output_amount_{output_key_suffix}'].update(visible=True)
                         else:
                             window.extend_layout(window['Outputs'], [create_output_layout(output_key_suffix)])
                         output_key_suffix += 1
-                        highest_key_suffix = max(highest_key_suffix, output_key_suffix)
+                        highest_output_key = max(highest_output_key, output_key_suffix)
                     window[f'output_item_{i}'].update(items[item])
                     window[f'output_amount_{i}'].update(amount)
                 # Load maximize checkbox
@@ -350,16 +403,27 @@ while True:
             window[f'weight_{key}'].update(value)
         for key in recipes:
             window[f'recipe_{key}'].update(True)
+        # Inputs
+        window[f'input_item_{0}'].update('')
+        window[f'input_amount_{0}'].update('0')
+        for i in range(1, highest_output_key):
+            window[f'input_item_{i}'].update('')
+            window[f'input_amount_{i}'].update(0)
+            window[f'input_item_{i}'].update(visible=False)
+            window[f'input_amount_{i}'].update(visible=False)
+        input_key_suffix = 1
+        # Outputs
         window[f'output_item_{0}'].update('')
         window[f'output_amount_{0}'].update('0')
         window[f'output_checkbox_{0}'].update(False)
-        for i in range(1, highest_key_suffix):
+        for i in range(1, highest_output_key):
             window[f'output_item_{i}'].update('')
             window[f'output_amount_{i}'].update(0)
             window[f'output_item_{i}'].update(visible=False)
             window[f'output_amount_{i}'].update(visible=False)
             window[f'output_checkbox_{i}'].update(visible=False)
         output_key_suffix = 1
+        # Windows
         window['results_output'].update('')
         window['products_output'].update('')
         window['ingredients_output'].update('')
@@ -371,12 +435,18 @@ while True:
             resource_limits = {key: float(values[f'resource_{key}']) for key in resource_limits}
             weights = {key: float(values[f'weight_{key}']) for key in weights}
             recipes_off = [key for key in recipes if not values[f'recipe_{key}']]
+            inputs = {key: float(values[f'input_amount_{i}']) for i in range(input_key_suffix) for key, name in sorted_items if name == values[f'input_item_{i}']}
             outputs = {key: float(values[f'output_amount_{i}']) for i in range(output_key_suffix) for key, name in sorted_items if name == values[f'output_item_{i}']}
             max_item = next((key for key, name in sorted_items if name == values['output_item_0']), False) if values.get('output_checkbox_0') else False
-            results = optimize_production(data, resource_limits, outputs, recipes_off, weights, max_item)
+            results = optimize_production(data, resource_limits, inputs, outputs, recipes_off, weights, max_item)
 
             # Results tab
-            results_output = 'Items Returned:\n'
+            results_output = ''
+            if results.get('items_input', {}):
+                results_output = 'Items Given:\n'
+                results_output += '\n'.join(f"{item}: {round(amount, 2)}" for item, amount in sorted(results.get('items_input', {}).items()))
+                results_output += '\n\n'
+            results_output += 'Items Returned:\n'
             results_output += '\n'.join(f"{item}: {round(amount, 2)}" for item, amount in sorted(results.get('items_output', {}).items()))
             results_output += '\n\nResources:\n'
             r_limits = {data['resources'][r]['name']: lim for r, lim in resource_limits.items()}
