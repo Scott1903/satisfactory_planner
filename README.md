@@ -1,5 +1,5 @@
 For Satisfactory updates:
-read_docs.py in Data folder requires Satisfactory/CommunityResources/Docs/Docs.json file copied into the same dir.  Running that will create the data.json file for this model.  (Beacons have to be manually added in Update 8)
+read_docs.py in Data folder requires Satisfactory/CommunityResources/Docs/Docs.json file copied into the same dir.  Running that will create the data.json file for this model.  (read_docs.py out of date for 1.0, some manual input was needed until an update can be made.)
 
 Run gui.py to open the program.
 
