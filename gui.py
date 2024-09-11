@@ -23,25 +23,26 @@ def default_settings():
     return {
         'resource_limits': {
             'Desc_Water_C': 100000,
-            'Desc_OreGold_C': 11040,
-            'Desc_RawQuartz_C': 10500,
-            'Desc_Coal_C': 30120,
+            'Desc_OreGold_C': 15000,
+            'Desc_RawQuartz_C': 13500,
+            'Desc_Coal_C': 42300,
             'Desc_NitrogenGas_C': 12000,
-            'Desc_OreIron_C': 70380,
-            'Desc_Sulfur_C': 6840,
-            'Desc_OreBauxite_C': 9780,
+            'Desc_OreIron_C': 92100,
+            'Desc_Sulfur_C': 10800,
+            'Desc_OreBauxite_C': 12300,
             'Desc_OreUranium_C': 2100,
-            'Desc_Stone_C': 52860,
-            'Desc_LiquidOil_C': 11700,
-            'Desc_OreCopper_C': 28860},
+            'Desc_Stone_C': 69900,
+            'Desc_LiquidOil_C': 12600,
+            'Desc_OreCopper_C': 36900,
+            'Desc_SAM_C': 10200},
         'weights': {
-            'Power Use': 0.1,
-            'Item Use': 0.3,
+            'Power Use': 0.3,
+            'Item Use': 0.4,
             'Building Use': 0,
             'Resource Use': 0,
-            'Buildings Scaled': 1,
+            'Buildings Scaled': 20,
             'Resources Scaled': 1,
-            'Uranium Waste': 999999},
+            'Uranium Waste': 9999999},
         'recipes_off': [],
         'inputs': {},
         'outputs': {},
@@ -122,28 +123,29 @@ resource_layout = [
 weight_info = {
     'Power Use': 'Penalty for power used. \
                 \n\nThe to total MW of power used to produce output. \
-                \n\nFor most power sources late-game,\n1 MW requires 0.1 resources* \
-                \n\nRecommended [0.1] between 0.08 and 0.28.',
+                \n\nFor nuclear power plants, \n1 MW requires 0.12 resources*. \
+                \n\nRecommended [0.12] for resource optimization. \nRecommended [0.3] for minimizing infrastructure need.',
     'Item Use': 'Penalty for items to belt. \
                 \n\nThe sum of all items produced/recycled. \
-                \n\nValues >= 0.3 will start removing screw recipes. \
-                \n\nRecommended [0.3] between 0 and 1.',
+                \n\nValues >= 0.4 will start removing screw recipes. \
+                \n\nRecommended [0] for resource optimization. \nRecommended [0.4] for simplifying production.',
     'Building Use': 'Penalty for machine count. \
                 \n\nThe total miners, smelters, assemblers, ect. \
-                \n\nRecommended [0] to use buildings_scaled.',
+                \n\nRecommended [0] instead use buildings_scaled.',
     'Resource Use': 'Penalty for raw resource use. \
                 \n\nThe total raw resources (all scaled equally). \
-                \n\nRecommended [0] to use resources_scaled.',
+                \n\nRecommended [0] instead use resources_scaled.',
     'Buildings Scaled': 'Penalty for complex machines. \
-                \n\nThe sum of (#inputs + #outputs - 1)^2 * n machines. \
-                \n\nValues >= 1 will start prioritizing more Smelters over Refineries (Copper, Iron, Caterium). \
-                \n\nRecommended [1] between 0 and 4.',
+                \n\nThe sum of (#inputs + #outputs - 1)^1.584963/3 * n machines. \
+                \n1 full Manufacturer = 3 Assemblers = 9 Constructors. \
+                \n\nValues >= 10 will start prioritizing more Smelters over Refineries (Iron, Caterium). \
+                \n\nRecommended [0] for resource optimization. \nRecommended [20] for simplifying production.',
     'Resources Scaled': 'Penalty for rare resource use. \
                 \n\nThe total resources used scaled by limits provided. \
                 \n\nTo give Water no penalty, set Water to very high limit. \
                 \n\nRecommended [1].',
     'Uranium Waste': 'Penalty for not sinking Uranium Waste products. \
-                \n\nRecommended [999999] very high value.',
+                \n\nRecommended [9999999] very high value.',
 }
 
 # Layout for weights page
@@ -231,7 +233,7 @@ layout = [
     ])]
 ]
 
-window = sg.Window('Satisfactory Optimization Tool - Update 8', layout)
+window = sg.Window('Satisfactory Optimization Tool - 1.0', layout)
 
 input_key_suffix = 1
 highest_input_key = 1
@@ -438,14 +440,29 @@ while True:
             inputs = {key: float(values[f'input_amount_{i}']) for i in range(input_key_suffix) for key, name in sorted_items if name == values[f'input_item_{i}']}
             outputs = {key: float(values[f'output_amount_{i}']) for i in range(output_key_suffix) for key, name in sorted_items if name == values[f'output_item_{i}']}
             max_item = next((key for key, name in sorted_items if name == values['output_item_0']), False) if values.get('output_checkbox_0') else False
+            if values['output_item_0'] == 'Points':
+                max_item = 'Points'
+                for key, limit in resource_limits.items():
+                    if limit == 0:
+                        resource_limits[key] = 0.00001  # Prevent divide-by-zero error
             results = optimize_production(data, resource_limits, inputs, outputs, recipes_off, weights, max_item)
 
             # Results tab
             results_output = ''
+            if max_item == 'Points':
+                results_output += 'Sink Points: {}\n\n'.format(round(results.get('sink_points', 0), 1))
             if results.get('items_input', {}):
                 results_output = 'Items Given:\n'
                 results_output += '\n'.join(f"{item}: {round(amount, 2)}" for item, amount in sorted(results.get('items_input', {}).items()))
                 results_output += '\n\n'
+            # --------- For Tests --------
+            #results_output += 'Items Not Needed:\n'
+            #results_output += '\n'.join(f"{item}: {round(amount, 2)}" for item, amount in sorted(results.get('items_not_needed', {}).items()))
+            #results_output += '\n\n'
+            #results_output += 'Items Needed:\n'
+            #results_output += '\n'.join(f"{item}: {round(amount, 2)}" for item, amount in sorted(results.get('items_needed', {}).items()))
+            #results_output += '\n\n'
+            # --------- For Tests --------
             results_output += 'Items Returned:\n'
             results_output += '\n'.join(f"{item}: {round(amount, 2)}" for item, amount in sorted(results.get('items_output', {}).items()))
             results_output += '\n\nResources:\n'

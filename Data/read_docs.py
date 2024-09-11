@@ -8,7 +8,8 @@ ITEM_CLASSES = [
     "/Script/CoreUObject.Class'/Script/FactoryGame.FGItemDescriptorBiomass'"]
 RESOURCE_CLASS = "/Script/CoreUObject.Class'/Script/FactoryGame.FGResourceDescriptor'"
 MACHINE_CLASSES = [
-    "/Script/CoreUObject.Class'/Script/FactoryGame.FGBuildableManufacturer'",
+    "/Script/CoreUObject.Class'/Script/FactoryGame.FGBuildableManufacturer'"]
+VARIABLE_MACHINE_CLASSES = [
     "/Script/CoreUObject.Class'/Script/FactoryGame.FGBuildableManufacturerVariablePower'"]
 GENERATOR_CLASSES = [
     "/Script/CoreUObject.Class'/Script/FactoryGame.FGBuildableGeneratorFuel'",
@@ -39,14 +40,16 @@ def read_docs(file_path):
             load_items(entry['Classes'], data_dict['resources'])
         elif native_class in MACHINE_CLASSES:
             load_machines(entry['Classes'], data_dict['machines'])
+        elif native_class in VARIABLE_MACHINE_CLASSES:
+            load_variable_machines(entry['Classes'], data_dict['machines'])
 
-    data_dict['items'].update({'Power_Produced': {'name': 'Power'}})
+    data_dict['items'].update({'Power_Produced': {'name': 'Power', 'points': 0.0}})
     all_items = {**data_dict['items'], **data_dict['resources']}
     
     for entry in docs_data:
         native_class = entry['NativeClass']
         if native_class == RECIPE_CLASS:
-            load_recipes(entry['Classes'], data_dict['recipes'], all_items)
+            load_recipes(entry['Classes'], data_dict['recipes'], all_items, data_dict['machines'])
         elif native_class in GENERATOR_CLASSES:
             load_generators(entry['Classes'], data_dict['machines'], data_dict['recipes'], all_items)
 
@@ -63,9 +66,10 @@ def load_items(classes, items):
         items[data['ClassName']] = {
             'name': data['mDisplayName'],
             'energy': energy_value,
-            'form': data['mForm']}
+            'form': data['mForm'],
+            'points': int(data['mResourceSinkPoints'])}
 
-def load_recipes(classes, recipes, all_items):
+def load_recipes(classes, recipes, all_items, machines):
     for data in classes:
         machine = re.search(r'Build_([\w]+)_C', data['mProducedIn'])
         if machine:
@@ -74,7 +78,10 @@ def load_recipes(classes, recipes, all_items):
                 'time': float(data['mManufactoringDuration']),
                 'ingredients': extract_products(data['mIngredients'], all_items),
                 'products': extract_products(data['mProduct'], all_items),
-                'machine': f"Build_{machine.group(1)}_C"}
+                'machine': f"Build_{machine.group(1)}_C",
+                'power_use': machines[f"Build_{machine.group(1)}_C"]['power_use']}
+            if float(data['mVariablePowerConsumptionConstant']) > 0:
+                recipes[data['ClassName']]['power_use'] = float(data['mVariablePowerConsumptionConstant']) + float(data['mVariablePowerConsumptionFactor'])/2
 
 def extract_products(data, all_items):
     products = []
@@ -97,7 +104,7 @@ def load_variable_machines(classes, machines):
     for data in classes:
         machines[data['ClassName']] = {
             'name': data['mDisplayName'],
-            'power_use': (float(data['mEstimatedMaximumPowerConsumption']) - float(data['mEstimatedMininumPowerConsumption'])) / 2,
+            'power_use': (float(data['mEstimatedMaximumPowerConsumption']) - float(data['mEstimatedMininumPowerConsumption'])) / 2 + float(data['mEstimatedMininumPowerConsumption']),
             'power_produced': 0}
 
 def load_generators(classes, machines, recipes, all_items):
@@ -117,7 +124,8 @@ def load_generators(classes, machines, recipes, all_items):
                     'time': time,
                     'ingredients': extract_generator_ingredients(data, fuel_data, power_production, time),
                     'products': extract_generator_byproduct(fuel_data, power_production, time),
-                    'machine': data['ClassName']}
+                    'machine': data['ClassName'],
+                    'power_use': 0.0}
                 
 def extract_generator_ingredients(data, fuel_data, power_production, time):
     ingredients = [{'item': fuel_data['mFuelClass'], 'amount': 1}]

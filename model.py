@@ -26,6 +26,7 @@ def define_variables(m, all_items, recipes):
     m.resource_use = Var(within=NonNegativeReals)
     m.buildings_scaled = Var(within=NonNegativeReals)
     m.resources_scaled = Var(within=NonNegativeReals)
+    m.sink_points = Var(within=NonNegativeReals)
 
 def fix_input_amounts(m, inputs, all_items):
     for item in all_items:
@@ -75,11 +76,11 @@ def add_resource_constraints(m, resource_limits):
             raise KeyError(f"Resource '{resource}' not found in model items.")
 
 def calculate_power_use(m, data, recipes):
-    expr = sum(data['machines'][data['recipes'][recipe_key]['machine']]['power_use'] * m.r[recipe_key] for recipe_key in recipes) + sum(m.i[item] * 0.167 for item in m.i if item in data['resources'])
+    expr = sum(data['recipes'][recipe_key]['power_use'] * m.r[recipe_key] for recipe_key in recipes) + sum(m.i[item] * 0.168 for item in m.i if item in data['resources'])
     m.c.add(expr == m.power_use)
 
 def calculate_item_use(m, items):
-    expr = sum(m.i[item] for item in items if item != 'Power_Produced')
+    expr = sum(m.i[item] for item in items if item != 'Power_Produced_Other' and item != 'Power_Produced_Fuel' and item != 'Power_Produced_Nuclear')
     m.c.add(expr == m.item_use)
 
 def calculate_building_use(m, recipes):
@@ -91,34 +92,58 @@ def calculate_resource_use(m, resource_limits):
     m.c.add(expr == m.resource_use)
 
 def calculate_buildings_scaled(m, data, recipes):
-    expr = sum((len(data['recipes'][recipe_key]['ingredients']) + len(data['recipes'][recipe_key]['products']) - 1) ** 2 * m.r[recipe_key] * 4.1 for recipe_key in recipes)
+    expr = sum((len(data['recipes'][recipe_key]['ingredients']) + len(data['recipes'][recipe_key]['products']) - 1) ** 1.584963 * m.r[recipe_key]/3 for recipe_key in recipes)
     m.c.add(expr == m.buildings_scaled)
 
-def calculate_resources_scaled(m, data, resource_weights):
+def calculate_resources_scaled(m, resource_weights):
     expr = sum(resource_weights[resource] * m.i[resource] for resource in resource_weights if resource in m.i)
     m.c.add(expr == m.resources_scaled)
 
-def set_objective(m, weights, max_item):
-    if max_item:
-        max_item_expr = -(m.x[max_item] * 9999999)
-    else:
-        max_item_expr = 0
+def calculate_sink_points(m, data, items):
+    expr = sum(data['items'][item]['points'] * m.x[item] for item in items if item in data['items'] and data['items'][item]['points'] > 0 and data['items'][item]['form'] == 'RF_SOLID')
+    m.c.add(expr == m.sink_points)
 
+def set_objective(m, weights, max_item):
     waste_penalty_expr = m.x['Desc_NuclearWaste_C'] + \
                          m.x['Desc_NonFissibleUranium_C'] + \
                          m.x['Desc_PlutoniumPellet_C'] + \
-                         m.x['Desc_PlutoniumCell_C']
-
-    m.objective = Objective(
-        expr = m.power_use * weights['Power Use'] + \
-               m.item_use * weights['Item Use'] + \
-               m.building_use * weights['Building Use'] + \
-               m.resource_use * weights['Resource Use'] + \
-               m.buildings_scaled * weights['Buildings Scaled'] + \
-               m.resources_scaled * weights['Resources Scaled'] + \
-               waste_penalty_expr * weights['Uranium Waste'] + \
-               max_item_expr,
-        sense = minimize)
+                         m.x['Desc_PlutoniumCell_C'] + \
+                         m.x['Desc_PlutoniumWaste_C']
+    
+    if max_item == 'Points':
+        # Set Limited Resources to Zero
+        m.i['Desc_AlienProtein_C'].fix(0)
+        m.i['Desc_Crystal_mk3_C'].fix(0)
+        m.i['Desc_Crystal_mk2_C'].fix(0)
+        m.i['Desc_Crystal_C'].fix(0)
+        m.i['Desc_Gift_C'].fix(0)
+        m.i['Desc_FlowerPetals_C'].fix(0)
+        m.i['Desc_Wood_C'].fix(0)
+        m.i['Desc_StingerParts_C'].fix(0)
+        m.i['Desc_SpitterParts_C'].fix(0)
+        m.i['Desc_HogParts_C'].fix(0)
+        m.i['Desc_HatcherParts_C'].fix(0)
+        m.i['Desc_Mycelia_C'].fix(0)
+        m.i['Desc_Leaves_C'].fix(0)
+        m.objective = Objective(
+            expr = m.power_use * weights['Power Use'] + waste_penalty_expr * weights['Uranium Waste'] - m.sink_points,
+            sense = minimize)
+        
+    elif max_item:
+        m.objective = Objective(
+            expr = m.power_use * weights['Power Use'] + waste_penalty_expr * weights['Uranium Waste'] - m.x[max_item] * 9999999,
+            sense = minimize)
+        
+    else:
+        m.objective = Objective(
+            expr = m.power_use * weights['Power Use'] + \
+                m.item_use * weights['Item Use'] + \
+                m.building_use * weights['Building Use'] + \
+                m.resource_use * weights['Resource Use'] + \
+                m.buildings_scaled * weights['Buildings Scaled'] + \
+                m.resources_scaled * weights['Resources Scaled'] + \
+                waste_penalty_expr * weights['Uranium Waste'],
+            sense = minimize)
 
 def create_model(data, resource_limits, inputs, outputs, weights, max_item):
     m = ConcreteModel()
@@ -143,7 +168,8 @@ def create_model(data, resource_limits, inputs, outputs, weights, max_item):
     calculate_building_use(m, recipes)
     calculate_resource_use(m, resource_limits)
     calculate_buildings_scaled(m, data, recipes)
-    calculate_resources_scaled(m, data, resource_weights)
+    calculate_resources_scaled(m, resource_weights)
+    calculate_sink_points(m, data, products)
     set_objective(m, weights, max_item)
 
     return m
