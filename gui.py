@@ -36,11 +36,11 @@ def default_settings():
             'Desc_OreCopper_C': 36900,
             'Desc_SAM_C': 10200},
         'weights': {
-            'Power Use': 0.3,
+            'Power Use': 0.0,
             'Item Use': 0.4,
             'Building Use': 0,
             'Resource Use': 0,
-            'Buildings Scaled': 20,
+            'Buildings Scaled': 30,
             'Resources Scaled': 1,
             'Uranium Waste': 9999999},
         'recipes_off': [],
@@ -123,8 +123,10 @@ resource_layout = [
 weight_info = {
     'Power Use': 'Penalty for power used. \
                 \n\nThe to total MW of power used to produce output. \
-                \n\nFor nuclear power plants, \n1 MW requires 0.12 resources*. \
-                \n\nRecommended [0.12] for resource optimization. \nRecommended [0.3] for minimizing infrastructure need.',
+                \n\nFor nuclear power plants, \n1 MW requires 0.143 resources*. \
+                \nFor fuel power plants, \n1 MW requires 0.055 resources*. \
+                \nWhen running max sink points, \n1 MW requires 0.084 resources*. \
+                \n\nRecommended [0.094] for resource optimization. \nRecommended [0.3] for minimizing infrastructure need.',
     'Item Use': 'Penalty for items to belt. \
                 \n\nThe sum of all items produced/recycled. \
                 \n\nValues >= 0.4 will start removing screw recipes. \

@@ -828,6 +828,10 @@
             "form": "RF_SOLID",
             "points": 0
         },
+        "Power_Produced": {
+            "name": "Power (Total)",
+            "points": 0.0
+        },
         "Power_Produced_Other": {
             "name": "Power (Other)",
             "points": 0.0
@@ -7465,6 +7469,10 @@
                 {
                     "item": "Power_Produced_Other",
                     "amount": 5.0
+                },
+                {
+                    "item": "Power_Produced",
+                    "amount": 5.0
                 }
             ],
             "machine": "Build_GeneratorCoal_C",
@@ -7486,6 +7494,10 @@
             "products": [
                 {
                     "item": "Power_Produced_Other",
+                    "amount": 10.5
+                },
+                {
+                    "item": "Power_Produced",
                     "amount": 10.5
                 }
             ],
@@ -7509,6 +7521,10 @@
                 {
                     "item": "Power_Produced_Other",
                     "amount": 3.0
+                },
+                {
+                    "item": "Power_Produced",
+                    "amount": 3.0
                 }
             ],
             "machine": "Build_GeneratorCoal_C",
@@ -7526,6 +7542,10 @@
             "products": [
                 {
                     "item": "Power_Produced_Fuel",
+                    "amount": 12.5
+                },
+                {
+                    "item": "Power_Produced",
                     "amount": 12.5
                 }
             ],
@@ -7545,6 +7565,10 @@
                 {
                     "item": "Power_Produced_Fuel",
                     "amount": 33.333333333333336
+                },
+                {
+                    "item": "Power_Produced",
+                    "amount": 33.333333333333336
                 }
             ],
             "machine": "Build_GeneratorFuel_C",
@@ -7562,6 +7586,10 @@
             "products": [
                 {
                     "item": "Power_Produced_Fuel",
+                    "amount": 12.5
+                },
+                {
+                    "item": "Power_Produced",
                     "amount": 12.5
                 }
             ],
@@ -7581,6 +7609,10 @@
                 {
                     "item": "Power_Produced_Fuel",
                     "amount": 60.0
+                },
+                {
+                    "item": "Power_Produced",
+                    "amount": 60.0
                 }
             ],
             "machine": "Build_GeneratorFuel_C",
@@ -7598,6 +7630,10 @@
             "products": [
                 {
                     "item": "Power_Produced_Fuel",
+                    "amount": 83.33333333333333
+                },
+                {
+                    "item": "Power_Produced",
                     "amount": 83.33333333333333
                 }
             ],
@@ -7617,6 +7653,10 @@
                 {
                     "item": "Power_Produced_Other",
                     "amount": 0.25
+                },
+                {
+                    "item": "Power_Produced",
+                    "amount": 0.25
                 }
             ],
             "machine": "Build_GeneratorBiomass_Automated_C",
@@ -7634,6 +7674,10 @@
             "products": [
                 {
                     "item": "Power_Produced_Other",
+                    "amount": 1.6666666666666667
+                },
+                {
+                    "item": "Power_Produced",
                     "amount": 1.6666666666666667
                 }
             ],
@@ -7653,6 +7697,10 @@
                 {
                     "item": "Power_Produced_Other",
                     "amount": 0.3333333333333333
+                },
+                {
+                    "item": "Power_Produced",
+                    "amount": 0.3333333333333333
                 }
             ],
             "machine": "Build_GeneratorBiomass_Automated_C",
@@ -7670,6 +7718,10 @@
             "products": [
                 {
                     "item": "Power_Produced_Other",
+                    "amount": 3.0
+                },
+                {
+                    "item": "Power_Produced",
                     "amount": 3.0
                 }
             ],
@@ -7689,6 +7741,10 @@
                 {
                     "item": "Power_Produced_Other",
                     "amount": 7.5
+                },
+                {
+                    "item": "Power_Produced",
+                    "amount": 7.5
                 }
             ],
             "machine": "Build_GeneratorBiomass_Automated_C",
@@ -7706,6 +7762,10 @@
             "products": [
                 {
                     "item": "Power_Produced_Other",
+                    "amount": 12.5
+                },
+                {
+                    "item": "Power_Produced",
                     "amount": 12.5
                 }
             ],
@@ -7728,6 +7788,10 @@
             "products": [
                 {
                     "item": "Power_Produced_Nuclear",
+                    "amount": 12500.0
+                },
+                {
+                    "item": "Power_Produced",
                     "amount": 12500.0
                 },
                 {
@@ -7757,6 +7821,10 @@
                     "amount": 25000.0
                 },
                 {
+                    "item": "Power_Produced",
+                    "amount": 25000.0
+                },
+                {
                     "item": "Desc_PlutoniumWaste_C",
                     "amount": 10.0
                 }
@@ -7780,6 +7848,10 @@
             "products": [
                 {
                     "item": "Power_Produced_Nuclear",
+                    "amount": 2500.0
+                },
+                {
+                    "item": "Power_Produced",
                     "amount": 2500.0
                 }
             ],

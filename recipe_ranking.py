@@ -38,19 +38,20 @@ outputs = {
     'Desc_SpaceElevatorPart_11_C': 2,
     'Desc_CrystalShard_C': 5,
     'Desc_PackagedIonizedFuel_C': 100,
+    'Desc_FluidCanister_C': 100,
     'Desc_HazmatFilter_C': 2,
     'Desc_NobeliskNuke_C': 2,
     'Desc_CartridgeChaos_C': 50,
-    'Desc_IronScrew_C': 3000,
-    'Desc_IronRod_C': 750,
-    'Desc_Cable_C': 500}
+    'Desc_IronRod_C': 600,
+    'Desc_Cable_C': 200,
+    'Desc_IronScrew_C': 2000}
 
 weights = {
-    'Power Use': 0.3,
+    'Power Use': 0.0,
     'Item Use': 0.4,
     'Building Use': 0,
     'Resource Use': 0,
-    'Buildings Scaled': 20,
+    'Buildings Scaled': 30,
     'Resources Scaled': 1,
     'Uranium Waste': 9999999}
 

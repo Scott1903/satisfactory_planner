@@ -80,7 +80,7 @@ def calculate_power_use(m, data, recipes):
     m.c.add(expr == m.power_use)
 
 def calculate_item_use(m, items):
-    expr = sum(m.i[item] for item in items if item != 'Power_Produced_Other' and item != 'Power_Produced_Fuel' and item != 'Power_Produced_Nuclear')
+    expr = sum(m.i[item] for item in items if item != 'Power_Produced' and item != 'Power_Produced_Other' and item != 'Power_Produced_Fuel' and item != 'Power_Produced_Nuclear')
     m.c.add(expr == m.item_use)
 
 def calculate_building_use(m, recipes):
@@ -113,11 +113,7 @@ def set_objective(m, weights, max_item):
     if max_item == 'Points':
         # Set Limited Resources to Zero
         m.i['Desc_AlienProtein_C'].fix(0)
-        m.i['Desc_Crystal_mk3_C'].fix(0)
-        m.i['Desc_Crystal_mk2_C'].fix(0)
-        m.i['Desc_Crystal_C'].fix(0)
         m.i['Desc_Gift_C'].fix(0)
-        m.i['Desc_FlowerPetals_C'].fix(0)
         m.i['Desc_Wood_C'].fix(0)
         m.i['Desc_StingerParts_C'].fix(0)
         m.i['Desc_SpitterParts_C'].fix(0)
