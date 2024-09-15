@@ -24,6 +24,7 @@ Install the required packages using pip:
 
 ```bash
 pip install -r requirements.txt
+pip install pyinstaller
 ```
 
 You may wish to use a Python [Virtual Environment](https://docs.python.org/3/library/venv.html) to avoid polluting your system Python installation.
