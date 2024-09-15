@@ -1,0 +1,11 @@
+altgraph==0.17.4
+packaging==24.1
+pefile==2024.8.26
+ply==3.11
+pyasn1==0.6.1
+pyinstaller==6.10.0
+pyinstaller-hooks-contrib==2024.8
+Pyomo==6.8.0
+PySimpleGUI==5.0.6
+pywin32-ctypes==0.2.3
+rsa==4.9
