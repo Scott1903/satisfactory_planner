@@ -10,10 +10,9 @@ Running that will create the data.json file for this model. (read_docs.py out of
 
 ## Setup
 
-Install Python 3.8.5 or later. [link](https://www.python.org/downloads/)
-Install `glpk` open-source solver onto your computer. [link](https://ftp.gnu.org/gnu/glpk/?C=N;O=D)
-
-In `main.py`, change the solver path to the location of the `glpsol` executable on your computer.
+- Install Python 3.8.5 or later. [link](https://www.python.org/downloads/)
+- Install `glpk` open-source solver onto your computer. [link](https://ftp.gnu.org/gnu/glpk/?C=N;O=D)
+- In `main.py`, change the solver path to the location of the `glpsol` executable on your computer.
 
 ```python
 ...
