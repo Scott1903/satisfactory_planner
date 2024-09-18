@@ -1,7 +1,5 @@
 # Satisfactory Planner
 
-A tool to help plan and optimize your Satisfactory factory.
-
 ## Applying Satisfactory Updates
 
 `read_docs.py` in Data folder requires that `/Path/To/Satisfactory/CommunityResources/Docs/Docs.json` (these will be coded for your locale, e.g. `en-GB` - pick the matching one) is present in the project directory.
@@ -12,7 +10,18 @@ Running that will create the data.json file for this model. (read_docs.py out of
 
 - Install Python 3.8.5 or later. [link](https://www.python.org/downloads/)
 - Install `glpk` open-source solver onto your computer. [link](https://ftp.gnu.org/gnu/glpk/?C=N;O=D)
-- In `main.py`, change the solver path to the location of the `glpsol` executable on your computer.
+- Set the path where GLPK is installed.
+
+On Windows:
+
+1. Open System Control Panel (Win+X, then select System).
+2. Go to Advanced System Settings.
+3. Click on Environment Variables.
+4. Click New under System variables.
+5. Enter the path to the glpsol.exe: 
+Variable Name: GLPK_PATH
+Variable Value: (example, E:\\Applications\\pyomo glpk\\glpk-4.65\\w64).
+6. Restart your PC after setting the variable.
 
 ```python
 ...
