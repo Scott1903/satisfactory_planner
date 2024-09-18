@@ -23,12 +23,6 @@ Variable Name: GLPK_PATH
 Variable Value: (example, E:\\Applications\\pyomo glpk\\glpk-4.65\\w64).
 6. Restart your PC after setting the variable.
 
-```python
-...
-solver = SolverFactory('glpk', executable='E:\\Applications\\pyomo glpk\\glpk-4.65\\w64\\glpsol')
-...
-```
-
 Install the required packages using pip:
 
 ```bash
