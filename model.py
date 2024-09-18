@@ -108,7 +108,9 @@ def set_objective(m, settings):
                          m.x['Desc_NonFissibleUranium_C'] + \
                          m.x['Desc_PlutoniumPellet_C'] + \
                          m.x['Desc_PlutoniumCell_C'] + \
-                         m.x['Desc_PlutoniumWaste_C']
+                         m.x['Desc_PlutoniumWaste_C'] + \
+                         m.x['Desc_Ficsonium_C']# + \
+                         #m.x['Desc_PlutoniumFuelRod_C'] # need to implement a checkbox to force Ficsonium Fuel Rods
     
     if settings['max_item'] == 'Points':
         # Set Limited Resources to Zero
@@ -122,12 +124,12 @@ def set_objective(m, settings):
         m.i['Desc_Mycelia_C'].fix(0)
         m.i['Desc_Leaves_C'].fix(0)
         m.objective = Objective(
-            expr = m.power_use * settings['weights']['Power Use'] + waste_penalty_expr * settings['weights']['Uranium Waste'] - m.sink_points,
+            expr = m.power_use * settings['weights']['Power Use'] + waste_penalty_expr * settings['weights']['Nuclear Waste'] - m.sink_points,
             sense = minimize)
         
     elif settings['max_item']:
         m.objective = Objective(
-            expr = m.power_use * settings['weights']['Power Use'] + waste_penalty_expr * settings['weights']['Uranium Waste'] - m.x[settings['max_item']] * 9999999,
+            expr = m.power_use * settings['weights']['Power Use'] + waste_penalty_expr * settings['weights']['Nuclear Waste'] - m.x[settings['max_item']] * 9999999,
             sense = minimize)
         
     else:
@@ -138,7 +140,7 @@ def set_objective(m, settings):
                 m.resource_use * settings['weights']['Resource Use'] + \
                 m.buildings_scaled * settings['weights']['Buildings Scaled'] + \
                 m.resources_scaled * settings['weights']['Resources Scaled'] + \
-                waste_penalty_expr * settings['weights']['Uranium Waste'],
+                waste_penalty_expr * settings['weights']['Nuclear Waste'],
             sense = minimize)
 
 def create_model(data, settings):
