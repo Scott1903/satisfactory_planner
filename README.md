@@ -48,5 +48,5 @@ The Saves file contains the saved settings states by the user.
 ## Build a static executable using PyInstaller
 
 ```bash
-pyinstaller --onefile --windowed --icon=icon.ico --collect-all pyomo --name SatisfactoryPlanner gui.py
+pyinstaller --onefile --windowed --icon=icon.ico --collect-all pyomo --name SatisfactoryPlanner --distpath . gui.py
 ```
