@@ -45,8 +45,6 @@ def load_settings(filename):
     except FileNotFoundError:
         return None
 
-settings = load_settings('Saves/default.json')
-
 # Function to save settings
 def save_settings(filename):
     with open(filename, 'w') as file:
@@ -58,6 +56,9 @@ if not os.path.exists('Saves'):
 
 # Extract recipes and their names from the data
 recipes = {key: data['recipes'][key]['name'] for key in data['recipes']}
+
+# Load default settings on startup
+settings = load_settings('Saves/default.json')
 
 # Separate recipes into regular and alternate lists
 regular_recipes = sorted([(key, name) for key, name in recipes.items() if not name.startswith('Alternate')], key=lambda x: x[1])
@@ -210,7 +211,11 @@ layout = [
     ])]
 ]
 
-window = sg.Window('Satisfactory Optimization Tool - 1.0', layout)
+window = sg.Window('Satisfactory Optimization Tool - 1.0', layout, finalize=True)
+
+# Update recipe checkboxes based on settings
+for key in recipes:
+    window[f'recipe_{key}'].update(value=key not in settings['recipes_off'])
 
 input_key_suffix = 1
 highest_input_key = 1
@@ -370,7 +375,7 @@ while True:
         for key, value in settings['weights'].items():
             window[f'weight_{key}'].update(value)
         for key in recipes:
-            window[f'recipe_{key}'].update(True)
+            window[f'recipe_{key}'].update(key not in settings['recipes_off'])
         # Inputs
         window[f'input_item_{0}'].update('')
         window[f'input_amount_{0}'].update('0')
