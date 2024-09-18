@@ -9,6 +9,24 @@ import PySimpleGUI as sg
 import json
 from main import optimize_production
 
+# Check if GLPK_PATH environment variable is set
+glpk_path = os.getenv('GLPK_PATH')
+if glpk_path is None:
+    # Show a popup if the environment variable is not set
+    sg.Popup(
+        "Environment Variable Not Set",
+        "The GLPK_PATH environment variable is not set. Install GLPK solver and set the path where GLPK is installed.",
+        "On Windows:",
+        "1. Open System Control Panel (Win+X, then select System).",
+        "2. Go to Advanced System Settings.",
+        "3. Click on Environment Variables.",
+        "4. Click New under System variables.",
+        "5. Enter the path to the glpsol.exe:",
+        "   Variable Name: GLPK_PATH",
+        "   Variable Value: (example, E:\\Applications\\pyomo glpk\\glpk-4.65\\w64).",
+        "Restart your PC after setting the variable."
+    )
+
 # Load data from data.json
 data_file = 'Data\data.json'
 try:
@@ -17,44 +35,6 @@ try:
 except Exception as e:
     sg.popup_error(f"Failed to load file: {e}")
     data = None
-
-# Default Settings
-def default_settings():
-    return {
-        'resource_limits': {
-            'Desc_Water_C': 100000,
-            'Desc_OreGold_C': 15000,
-            'Desc_RawQuartz_C': 13500,
-            'Desc_Coal_C': 42300,
-            'Desc_NitrogenGas_C': 12000,
-            'Desc_OreIron_C': 92100,
-            'Desc_Sulfur_C': 10800,
-            'Desc_OreBauxite_C': 12300,
-            'Desc_OreUranium_C': 2100,
-            'Desc_Stone_C': 69900,
-            'Desc_LiquidOil_C': 12600,
-            'Desc_OreCopper_C': 36900,
-            'Desc_SAM_C': 10200},
-        'weights': {
-            'Power Use': 0.0,
-            'Item Use': 0.4,
-            'Building Use': 0,
-            'Resource Use': 0,
-            'Buildings Scaled': 30,
-            'Resources Scaled': 1,
-            'Uranium Waste': 9999999},
-        'recipes_off': [],
-        'inputs': {},
-        'outputs': {},
-        'max_item': False}
-
-settings = default_settings()
-resource_limits = settings['resource_limits']
-weights = settings['weights']
-recipes_off = settings['recipes_off']
-inputs = settings['inputs']
-outputs = settings['outputs']
-max_item = settings['max_item']
 
 # Load settings on saved.json
 def load_settings(filename):
@@ -65,15 +45,10 @@ def load_settings(filename):
     except FileNotFoundError:
         return None
 
+settings = load_settings('Saves/default.json')
+
 # Function to save settings
 def save_settings(filename):
-    settings = {
-        'resource_limits': resource_limits,
-        'weights': weights,
-        'recipes_off': recipes_off,
-        'outputs': outputs,
-        'max_item': max_item
-    }
     with open(filename, 'w') as file:
         json.dump(settings, file)
 
@@ -115,7 +90,7 @@ resource_layout = [
     [sg.Text('Resource Limits', font=('Helvetica', 16), text_color=sg.LOOK_AND_FEEL_TABLE['Modern']['ACCENT1'])],
     *[
         [sg.Text(data['resources'][key]['name'], size=(20, 1)), sg.InputText(default_text=str(value), key=f"resource_{key}", size=(10, 1))]
-        for key, value in resource_limits.items()
+        for key, value in settings['resource_limits'].items()
     ]
 ]
 
@@ -155,7 +130,7 @@ weights_layout = [
     [sg.Text('Weights', font=('Helvetica', 16), text_color=sg.LOOK_AND_FEEL_TABLE['Modern']['ACCENT1'])],
     *[
         [sg.Text(key, size=(20, 1)), sg.InputText(default_text=str(value), key=f"weight_{key}", size=(10, 1)), sg.Button('Info', key=f"info_{key}")]
-        for key, value in weights.items()
+        for key, value in settings['weights'].items()
     ]
 ]
 
@@ -304,19 +279,19 @@ while True:
     elif event.startswith('output_checkbox_'):
         key_suffix = int(event.split('output_checkbox_')[1])
         if values[event] and key_suffix == 0:
-            max_item = sorted_items[0][0]  # Use first item as an example
+            settings['max_item'] = sorted_items[0][0]  # Use first item as an example
         else:
-            max_item = False
+            settings['max_item'] = False
 
     # Handle save settings button
     elif event == 'Save Settings':
         try:
-            resource_limits = {key: float(values[f'resource_{key}']) for key in resource_limits}
-            weights = {key: float(values[f'weight_{key}']) for key in weights}
-            recipes_off = [key for key in recipes if not values[f'recipe_{key}']]
-            inputs = {key: float(values[f'input_amount_{i}']) for i in range(input_key_suffix) for key, name in sorted_items if name == values[f'input_item_{i}']}
-            outputs = {key: float(values[f'output_amount_{i}']) for i in range(output_key_suffix) for key, name in sorted_items if name == values[f'output_item_{i}']}
-            max_item = next((key for key, name in sorted_items if name == values['output_item_0']), False) if values.get('output_checkbox_0') else False
+            settings['resource_limits'] = {key: float(values[f'resource_{key}']) for key in settings['resource_limits']}
+            settings['weights'] = {key: float(values[f'weight_{key}']) for key in settings['weights']}
+            settings['recipes_off'] = [key for key in recipes if not values[f'recipe_{key}']]
+            settings['inputs'] = {key: float(values[f'input_amount_{i}']) for i in range(input_key_suffix) for key, name in sorted_items if name == values[f'input_item_{i}']}
+            settings['outputs'] = {key: float(values[f'output_amount_{i}']) for i in range(output_key_suffix) for key, name in sorted_items if name == values[f'output_item_{i}']}
+            settings['max_item'] = next((key for key, name in sorted_items if name == values['output_item_0']), False) if values.get('output_checkbox_0') else False
 
             save_filename = sg.popup_get_file('Save settings as', save_as=True, no_window=True, default_extension=".json", file_types=(("JSON Files", "*.json"),), initial_folder='Saves')
         except Exception as e:
@@ -332,28 +307,22 @@ while True:
             loaded_settings = load_settings(load_filename)
             if loaded_settings:
                 settings.update(loaded_settings)
-                resource_limits = settings['resource_limits']
-                weights = settings['weights']
-                recipes_off = settings['recipes_off']
-                outputs = settings['outputs']
-                max_item = settings['max_item']
                 # Load resource limits
-                for key, value in resource_limits.items():
+                for key, value in settings['resource_limits'].items():
                     window[f'resource_{key}'].update(value)
                 # Load weights
-                for key, value in weights.items():
+                for key, value in settings['weights'].items():
                     window[f'weight_{key}'].update(value)
                 # Load recipe checkboxes
                 for key in recipes:
-                    window[f'recipe_{key}'].update(key not in recipes_off)
-                # Reset existing ipnut rows
+                    window[f'recipe_{key}'].update(key not in settings['recipes_off'])
+                # Reset existing input rows
                 for i in range(1, highest_input_key):
                     window[f'input_item_{i}'].update(visible=False)
                     window[f'input_amount_{i}'].update(visible=False)
-                    window[f'input_checkbox_{i}'].update(visible=False)
                 input_key_suffix = 1
                 # Load input rows
-                for i, (item, amount) in enumerate(inputs.items()):
+                for i, (item, amount) in enumerate(settings['inputs'].items()):
                     if i > 0:
                         if input_key_suffix < highest_input_key:
                             window[f'input_item_{input_key_suffix}'].update(visible=True)
@@ -371,7 +340,7 @@ while True:
                     window[f'output_checkbox_{i}'].update(visible=False)
                 output_key_suffix = 1
                 # Load output rows
-                for i, (item, amount) in enumerate(outputs.items()):
+                for i, (item, amount) in enumerate(settings['outputs'].items()):
                     if i > 0:
                         if output_key_suffix < highest_output_key:
                             window[f'output_item_{output_key_suffix}'].update(visible=True)
@@ -383,7 +352,7 @@ while True:
                     window[f'output_item_{i}'].update(items[item])
                     window[f'output_amount_{i}'].update(amount)
                 # Load maximize checkbox
-                if max_item:
+                if settings['max_item']:
                     window[f'output_checkbox_{0}'].update(True)
                 else:
                     window[f'output_checkbox_{0}'].update(False)
@@ -394,16 +363,11 @@ while True:
 
     # Handle reset button
     elif event == 'Reset':
-        settings = default_settings()
-        resource_limits = settings['resource_limits']
-        weights = settings['weights']
-        recipes_off = settings['recipes_off']
-        outputs = settings['outputs']
-        max_item = settings['max_item']
+        settings = load_settings('Saves/default.json')
 
-        for key, value in resource_limits.items():
+        for key, value in settings['resource_limits'].items():
             window[f'resource_{key}'].update(value)
-        for key, value in weights.items():
+        for key, value in settings['weights'].items():
             window[f'weight_{key}'].update(value)
         for key in recipes:
             window[f'recipe_{key}'].update(True)
@@ -436,43 +400,44 @@ while True:
     # Handle run optimization button
     elif event == 'Run Optimization':
         try:
-            resource_limits = {key: float(values[f'resource_{key}']) for key in resource_limits}
-            weights = {key: float(values[f'weight_{key}']) for key in weights}
-            recipes_off = [key for key in recipes if not values[f'recipe_{key}']]
-            inputs = {key: float(values[f'input_amount_{i}']) for i in range(input_key_suffix) for key, name in sorted_items if name == values[f'input_item_{i}']}
-            outputs = {key: float(values[f'output_amount_{i}']) for i in range(output_key_suffix) for key, name in sorted_items if name == values[f'output_item_{i}']}
-            max_item = next((key for key, name in sorted_items if name == values['output_item_0']), False) if values.get('output_checkbox_0') else False
+            settings['resource_limits'] = {key: float(values[f'resource_{key}']) for key in settings['resource_limits']}
+            settings['weights'] = {key: float(values[f'weight_{key}']) for key in settings['weights']}
+            settings['recipes_off'] = [key for key in recipes if not values[f'recipe_{key}']]
+            settings['inputs'] = {key: float(values[f'input_amount_{i}']) for i in range(input_key_suffix) for key, name in sorted_items if name == values[f'input_item_{i}']}
+            settings['outputs'] = {key: float(values[f'output_amount_{i}']) for i in range(output_key_suffix) for key, name in sorted_items if name == values[f'output_item_{i}']}
+            settings['max_item'] = next((key for key, name in sorted_items if name == values['output_item_0']), False) if values.get('output_checkbox_0') else False
             if values['output_item_0'] == 'Points':
-                max_item = 'Points'
-                for key, limit in resource_limits.items():
+                settings['max_item'] = 'Points'
+                for key, limit in settings['resource_limits'].items():
                     if limit == 0:
-                        resource_limits[key] = 0.00001  # Prevent divide-by-zero error
-            results = optimize_production(data, resource_limits, inputs, outputs, recipes_off, weights, max_item)
+                        settings['resource_limits'][key] = 0.00001  # Prevent divide-by-zero error
+            results = optimize_production(data, settings)
 
             # Results tab
             results_output = ''
-            if max_item == 'Points':
+            if settings['max_item'] == 'Points':
                 results_output += 'Sink Points: {}\n\n'.format(round(results.get('sink_points', 0), 1))
             if results.get('items_input', {}):
                 results_output = 'Items Given:\n'
                 results_output += '\n'.join(f"{item}: {round(amount, 2)}" for item, amount in sorted(results.get('items_input', {}).items()))
                 results_output += '\n\n'
+            results_output += 'Items Returned:\n'
+            results_output += '\n'.join(f"{item}: {round(amount, 2)}" for item, amount in sorted(results.get('items_output', {}).items()))
+            results_output += '\n\nResources:\n'
+            r_limits = {data['resources'][r]['name']: lim for r, lim in settings['resource_limits'].items()}
+            results_output += '\n'.join(f"{resource}: {round(amount, 2)} ({round(amount/r_limits[resource]*100,1)}%)" for resource, amount in sorted(results.get('resources_needed', {}).items()))
+            results_output += '\n\nRecipes:\n'
+            results_output += '\n'.join(f"{recipe} [{round(amount, 2)}]" for recipe, amount in sorted(results.get('recipes_used', {}).items()))
+            results_output += '\n\n'
+            results_output += 'Items In Production Chain:\n'
+            results_output += '\n'.join(f"{item}: {round(amount, 2)}" for item, amount in sorted(results.get('items_needed', {}).items()))
+            results_output += '\n\n'
             # --------- For Tests --------
             #results_output += 'Items Not Needed:\n'
             #results_output += '\n'.join(f"{item}: {round(amount, 2)}" for item, amount in sorted(results.get('items_not_needed', {}).items()))
             #results_output += '\n\n'
-            #results_output += 'Items Needed:\n'
-            #results_output += '\n'.join(f"{item}: {round(amount, 2)}" for item, amount in sorted(results.get('items_needed', {}).items()))
-            #results_output += '\n\n'
             # --------- For Tests --------
-            results_output += 'Items Returned:\n'
-            results_output += '\n'.join(f"{item}: {round(amount, 2)}" for item, amount in sorted(results.get('items_output', {}).items()))
-            results_output += '\n\nResources:\n'
-            r_limits = {data['resources'][r]['name']: lim for r, lim in resource_limits.items()}
-            results_output += '\n'.join(f"{resource}: {round(amount, 2)} ({round(amount/r_limits[resource]*100,1)}%)" for resource, amount in sorted(results.get('resources_needed', {}).items()))
-            results_output += '\n\nRecipes:\n'
-            results_output += '\n'.join(f"{recipe} [{round(amount, 2)}]" for recipe, amount in sorted(results.get('recipes_used', {}).items()))
-            results_output += '\n\nPower Used: {}\n'.format(round(results.get('power_use', 0), 1))
+            results_output += 'Power Used: {}\n'.format(round(results.get('power_use', 0), 1))
             results_output += 'Items: {}\n'.format(round(results.get('item_use', 0), 1))
             results_output += 'Buildings: {}\n'.format(round(results.get('buildings', 0), 1))
             results_output += 'Resources: {}\n'.format(round(results.get('resources', 0), 1))
