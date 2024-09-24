@@ -429,7 +429,8 @@ while True:
             results_output += 'Items Returned:\n'
             results_output += '\n'.join(f"{item}: {round(amount, 2)}" for item, amount in sorted(results.get('items_output', {}).items()))
             if results.get('power_produced', 0) > 0.01:
-                results_output += '\n\nResource*/Power Ratio: ' + str(round(results.get('resources_scaled', 0)/(results.get('power_produced', 0) - results.get('power_use', 0)), 2))
+                results_output += '\n\nNet Power Produced: ' + str(round(results.get('power_produced', 0) - results.get('power_use', 0), 2))
+                results_output += '\nResource*/Power Ratio: ' + str(round(results.get('resources_scaled', 0)/(results.get('power_produced', 0) - results.get('power_use', 0)), 2))
             results_output += '\n\nResources:\n'
             r_limits = {data['resources'][r]['name']: lim for r, lim in settings['resource_limits'].items()}
             results_output += '\n'.join(f"{resource}: {round(amount, 2)} ({round(amount/r_limits[resource]*100,1)}%)" for resource, amount in sorted(results.get('resources_needed', {}).items()))
