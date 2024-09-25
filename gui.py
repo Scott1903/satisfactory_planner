@@ -130,7 +130,14 @@ weight_info = {
 weights_layout = [
     [sg.Text('Weights', font=('Helvetica', 16), text_color=sg.LOOK_AND_FEEL_TABLE['Modern']['ACCENT1'])],
     *[
-        [sg.Text(key, size=(20, 1)), sg.InputText(default_text=str(value), key=f"weight_{key}", size=(10, 1)), sg.Button('Info', key=f"info_{key}")]
+        [sg.Text(key, size=(20, 1)), 
+         sg.InputText(default_text=str(value), key=f"weight_{key}", size=(10, 1)), 
+         sg.Button('Info', key=f"info_{key}"), 
+         sg.Checkbox('Force Plutonium Fuel Rod Sink', key=f"checkbox_{key}", default=False)] 
+        if key == 'Nuclear Waste' else 
+        [sg.Text(key, size=(20, 1)), 
+         sg.InputText(default_text=str(value), key=f"weight_{key}", size=(10, 1)), 
+         sg.Button('Info', key=f"info_{key}")]
         for key, value in settings['weights'].items()
     ]
 ]
@@ -293,11 +300,12 @@ while True:
         try:
             settings['resource_limits'] = {key: float(values[f'resource_{key}']) for key in settings['resource_limits']}
             settings['weights'] = {key: float(values[f'weight_{key}']) for key in settings['weights']}
+            settings['checkbox_Nuclear Waste'] = values.get('checkbox_Nuclear Waste', False)
             settings['recipes_off'] = [key for key in recipes if not values[f'recipe_{key}']]
             settings['inputs'] = {key: float(values[f'input_amount_{i}']) for i in range(input_key_suffix) for key, name in sorted_items if name == values[f'input_item_{i}']}
             settings['outputs'] = {key: float(values[f'output_amount_{i}']) for i in range(output_key_suffix) for key, name in sorted_items if name == values[f'output_item_{i}']}
             settings['max_item'] = next((key for key, name in sorted_items if name == values['output_item_0']), False) if values.get('output_checkbox_0') else False
-
+    
             save_filename = sg.popup_get_file('Save settings as', save_as=True, no_window=True, default_extension=".json", file_types=(("JSON Files", "*.json"),), initial_folder='Saves')
         except Exception as e:
             sg.popup_error(f"Error saving variables: {e}")
@@ -318,6 +326,8 @@ while True:
                 # Load weights
                 for key, value in settings['weights'].items():
                     window[f'weight_{key}'].update(value)
+                # Load nuclear waste checkbox
+                window['checkbox_Nuclear Waste'].update(value=settings['checkbox_Nuclear Waste'])
                 # Load recipe checkboxes
                 for key in recipes:
                     window[f'recipe_{key}'].update(key not in settings['recipes_off'])
@@ -374,6 +384,7 @@ while True:
             window[f'resource_{key}'].update(value)
         for key, value in settings['weights'].items():
             window[f'weight_{key}'].update(value)
+        window['checkbox_Nuclear Waste'].update(value=settings['checkbox_Nuclear Waste'])
         for key in recipes:
             window[f'recipe_{key}'].update(key not in settings['recipes_off'])
         # Inputs
@@ -407,6 +418,7 @@ while True:
         try:
             settings['resource_limits'] = {key: float(values[f'resource_{key}']) for key in settings['resource_limits']}
             settings['weights'] = {key: float(values[f'weight_{key}']) for key in settings['weights']}
+            settings['checkbox_Nuclear Waste'] = values.get('checkbox_Nuclear Waste', False)
             settings['recipes_off'] = [key for key in recipes if not values[f'recipe_{key}']]
             settings['inputs'] = {key: float(values[f'input_amount_{i}']) for i in range(input_key_suffix) for key, name in sorted_items if name == values[f'input_item_{i}']}
             settings['outputs'] = {key: float(values[f'output_amount_{i}']) for i in range(output_key_suffix) for key, name in sorted_items if name == values[f'output_item_{i}']}
