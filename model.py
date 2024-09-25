@@ -112,7 +112,7 @@ def set_objective(m, settings):
                          m.x['Desc_Ficsonium_C']
     
     if settings['checkbox_Nuclear Waste']:
-        waste_penalty_expr = waste_penalty_expr + m.x['Desc_PlutoniumFuelRod_C']
+        waste_penalty_expr = waste_penalty_expr + m.x['Desc_PlutoniumFuelRod_C']/10
     
     if settings['max_item'] == 'Points':
         # Set Limited Resources to Zero

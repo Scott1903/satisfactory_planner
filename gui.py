@@ -123,6 +123,7 @@ weight_info = {
                 \n\nTo give Water no penalty, set Water to very high limit. \
                 \n\nRecommended [1].',
     'Nuclear Waste': 'Penalty for not sinking Nuclear Waste products. \
+                \n\nCheckbox helps force Ficsonium route. \
                 \n\nRecommended [9999999] very high value.',
 }
 
@@ -133,7 +134,7 @@ weights_layout = [
         [sg.Text(key, size=(20, 1)), 
          sg.InputText(default_text=str(value), key=f"weight_{key}", size=(10, 1)), 
          sg.Button('Info', key=f"info_{key}"), 
-         sg.Checkbox('Force Plutonium Fuel Rod Sink', key=f"checkbox_{key}", default=False)] 
+         sg.Checkbox('Penalize Plutonium Fuel Rods', key=f"checkbox_{key}", default=False)] 
         if key == 'Nuclear Waste' else 
         [sg.Text(key, size=(20, 1)), 
          sg.InputText(default_text=str(value), key=f"weight_{key}", size=(10, 1)), 
