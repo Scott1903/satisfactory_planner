@@ -131,7 +131,7 @@ def set_objective(m, settings):
         
     elif settings['max_item']:
         m.objective = Objective(
-            expr = m.power_use * settings['weights']['Power Use'] + waste_penalty_expr * settings['weights']['Nuclear Waste'] - m.x[settings['max_item']] * 9999999,
+            expr = m.power_use * settings['weights']['Power Use'] + waste_penalty_expr * settings['weights']['Nuclear Waste'] - m.x[settings['max_item']] * 99999,
             sense = minimize)
         
     else:
