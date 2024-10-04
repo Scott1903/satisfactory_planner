@@ -9,7 +9,7 @@ Running that will create the data.json file for this model. (read_docs.py out of
 ## Setup
 
 - Install Python 3.8.5 or later. [link](https://www.python.org/downloads/)
-- Install `glpk` open-source solver onto your computer. [link](https://ftp.gnu.org/gnu/glpk/?C=N;O=D) [link for windows](https://winglpk.sourceforge.net/)
+- Install `glpk` open-source solver onto your computer. [link](https://ftp.gnu.org/gnu/glpk/?C=N;O=D) or for Windows: [link](https://winglpk.sourceforge.net/)
 - Set the path where GLPK is installed.
 
 On Windows:
