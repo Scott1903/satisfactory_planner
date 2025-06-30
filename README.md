@@ -1,12 +1,20 @@
 # Satisfactory Planner
 
-## Applying Satisfactory Updates
+This repository is no longer being supported.  See the new repository below.
+
+## New Repository for Web App version
+
+The PySimpleGUI library used to create the UI on this project went private.  It now requires a paid license to use.
+
+A new repository exists for a web app version of this project using a React frontend here:  [link](https://github.com/Scott1903/satisfactory-solver)
+
+## Applying Satisfactory Updates (Deprecated, see new repository)
 
 `read_docs.py` in Data folder requires that `/Path/To/Satisfactory/CommunityResources/Docs/Docs.json` (these will be coded for your locale, e.g. `en-GB` - pick the matching one) is present in the project directory.
 
 Running that will create the data.json file for this model. (read_docs.py out of date for 1.0, some manual input was needed until an update can be made.)
 
-## Setup
+## Setup (Deprecated, see new repository)
 
 - Install Python 3.8.5 or later. [link](https://www.python.org/downloads/)
 - Install `glpk` open-source solver onto your computer. [link](https://ftp.gnu.org/gnu/glpk/?C=N;O=D) or for Windows: [link](https://winglpk.sourceforge.net/)
@@ -32,7 +40,7 @@ pip install pyinstaller
 
 You may wish to use a Python [Virtual Environment](https://docs.python.org/3/library/venv.html) to avoid polluting your system Python installation.
 
-## Usage
+## Usage (Deprecated, see new repository)
 
 Run `gui.py` to open the program.
 
